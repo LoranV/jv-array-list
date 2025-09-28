@@ -1,5 +1,7 @@
 package core.basesyntax;
 
+import java.util.NoSuchElementException;
+
 public class ArrayList<T> implements List<T> {
     private static final int CONFIRMED_SIZE = 10;
     private int size = 0;
@@ -9,31 +11,42 @@ public class ArrayList<T> implements List<T> {
         listArray = new Object[CONFIRMED_SIZE];
     }
 
-    private void grow(int size) {
-        int newSize = size + (size >> 1);
-        Object[] tempArray = listArray;
-        listArray = new Object[newSize];
-        System.arraycopy(tempArray, 0, listArray, 0, size);
+    private void grow() {
+        int oldCapacity = listArray.length;
+        int newCapacity = oldCapacity + (oldCapacity >> 1); // 1.5x
+        resizeTo(newCapacity);
     }
 
-    private boolean validateElementIndex(int index) {
+    private void resizeTo(int newCapacity) {
+        Object[] newArray = new Object[newCapacity];
+        System.arraycopy(listArray, 0, newArray, 0, size);
+        listArray = newArray;
+    }
+
+    private boolean validateElementIndexInclude0(int index) {
         return index >= 0 && index <= size;
+    }
+
+    private boolean validateElementIndexExclude0(int index) {
+        return index >= 0 && index < size;
+    }
+
+    private void capacityIsFull() {
+        if (size == listArray.length) {
+            grow();
+        }
     }
 
     @Override
     public void add(T value) {
-        if (size == listArray.length) {
-            grow(size);
-        }
+        capacityIsFull();
         listArray[size++] = value;
     }
 
     @Override
     public void add(T value, int index) {
-        if (index >= 0 && index <= size) {
-            if (size >= listArray.length) {
-                grow(size);
-            }
+        if (validateElementIndexInclude0(index)) {
+            capacityIsFull();
             int numMoved = size - index;
             if (numMoved > 0) {
                 System.arraycopy(listArray, index, listArray, index + 1, numMoved);
@@ -56,7 +69,7 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public T get(int index) {
-        if (index >= 0 && index < size) {
+        if (validateElementIndexExclude0(index)) {
             return (T) listArray[index];
         } else {
             throw new ArrayListIndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -65,7 +78,7 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public void set(T value, int index) {
-        if (index >= 0 && index < size) {
+        if (validateElementIndexExclude0(index)) {
             listArray[index] = value;
         } else {
             throw new ArrayListIndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -74,7 +87,7 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public T remove(int index) {
-        if (index >= 0 && index < size) {
+        if (validateElementIndexExclude0(index)) {
             final T tempDel = (T) listArray[index];
             int numMoved = size - index - 1;
             if (numMoved > 0) {
@@ -98,14 +111,14 @@ public class ArrayList<T> implements List<T> {
         }
         if (elementIndex >= 0 && elementIndex < size) {
             final T tempDel = (T) listArray[elementIndex];
-            for (int i = elementIndex; i < size - 1; i++) {
-                listArray[i] = listArray[i + 1];
+            int elementsToMove = size - elementIndex - 1;
+            if (elementsToMove > 0) {
+                System.arraycopy(listArray, elementIndex + 1, listArray, elementIndex, elementsToMove);
             }
-            listArray[size - 1] = null;
-            size--;
+            listArray[--size] = null;
             return tempDel;
         } else {
-            throw new java.util.NoSuchElementException("Element not found: " + element);
+            throw new NoSuchElementException("Element not found: " + element);
         }
     }
 
