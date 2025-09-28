@@ -113,7 +113,8 @@ public class ArrayList<T> implements List<T> {
             final T tempDel = (T) listArray[elementIndex];
             int elementsToMove = size - elementIndex - 1;
             if (elementsToMove > 0) {
-                System.arraycopy(listArray, elementIndex + 1, listArray, elementIndex, elementsToMove);
+                System.arraycopy(listArray, elementIndex + 1,
+                        listArray, elementIndex, elementsToMove);
             }
             listArray[--size] = null;
             return tempDel;
