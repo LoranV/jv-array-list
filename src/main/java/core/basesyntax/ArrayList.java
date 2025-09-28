@@ -1,42 +1,44 @@
 package core.basesyntax;
 
-import java.util.Arrays;
-import java.util.NoSuchElementException;
-
 public class ArrayList<T> implements List<T> {
     private static final int CONFIRMED_SIZE = 10;
     private int size = 0;
-    private Object[] array;
+    private Object[] listArray;
 
     public ArrayList() {
-        array = new Object[CONFIRMED_SIZE];
+        listArray = new Object[CONFIRMED_SIZE];
     }
 
     private void grow(int size) {
         int newSize = size + (size >> 1);
-        array = Arrays.copyOf(array, newSize);
+        Object[] tempArray = listArray;
+        listArray = new Object[newSize];
+        System.arraycopy(tempArray, 0, listArray, 0, size);
+    }
+
+    private boolean validateElementIndex(int index) {
+        return index >= 0 && index <= size;
     }
 
     @Override
     public void add(T value) {
-        if (size < array.length) {
-            array[size++] = value;
-        } else {
+        if (size == listArray.length) {
             grow(size);
-            array[size++] = value;
         }
+        listArray[size++] = value;
     }
 
     @Override
     public void add(T value, int index) {
         if (index >= 0 && index <= size) {
-            if (size >= array.length) {
+            if (size >= listArray.length) {
                 grow(size);
             }
-            for (int i = size - 1; i >= index; i--) {
-                array[i + 1] = array[i];
+            int numMoved = size - index;
+            if (numMoved > 0) {
+                System.arraycopy(listArray, index, listArray, index + 1, numMoved);
             }
-            array[index] = value;
+            listArray[index] = value;
             size++;
         } else {
             throw new ArrayListIndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -49,15 +51,13 @@ public class ArrayList<T> implements List<T> {
             for (int i = 0; i < list.size(); i++) {
                 add(list.get(i));
             }
-        } else {
-            throw new ArrayListIndexOutOfBoundsException("List size: " + size);
         }
     }
 
     @Override
     public T get(int index) {
         if (index >= 0 && index < size) {
-            return (T) array[index];
+            return (T) listArray[index];
         } else {
             throw new ArrayListIndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
@@ -65,13 +65,9 @@ public class ArrayList<T> implements List<T> {
 
     @Override
     public void set(T value, int index) {
-        try {
-            if (index >= 0 && index < size) {
-                array[index] = value;
-            } else {
-                throw new ArrayListIndexOutOfBoundsException("Index: " + index + ", Size: " + size);
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
+        if (index >= 0 && index < size) {
+            listArray[index] = value;
+        } else {
             throw new ArrayListIndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
     }
@@ -79,12 +75,12 @@ public class ArrayList<T> implements List<T> {
     @Override
     public T remove(int index) {
         if (index >= 0 && index < size) {
-            final T tempDel = (T) array[index];
-            for (int i = index; i < size - 1; i++) {
-                array[i] = array[i + 1];
+            final T tempDel = (T) listArray[index];
+            int numMoved = size - index - 1;
+            if (numMoved > 0) {
+                System.arraycopy(listArray, index + 1, listArray, index, numMoved);
             }
-            array[size - 1] = null;
-            size--;
+            listArray[--size] = null;
             return tempDel;
         } else {
             throw new ArrayListIndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -95,20 +91,21 @@ public class ArrayList<T> implements List<T> {
     public T remove(T element) {
         int elementIndex = -1;
         for (int i = 0; i < size; i++) {
-            if (array[i] == null ? array[i] == element : array[i].equals(element)) {
+            if (listArray[i] == null ? listArray[i] == element : listArray[i].equals(element)) {
                 elementIndex = i;
+                break;
             }
         }
         if (elementIndex >= 0 && elementIndex < size) {
-            final T tempDel = (T) array[elementIndex];
+            final T tempDel = (T) listArray[elementIndex];
             for (int i = elementIndex; i < size - 1; i++) {
-                array[i] = array[i + 1];
+                listArray[i] = listArray[i + 1];
             }
-            array[size - 1] = null;
+            listArray[size - 1] = null;
             size--;
             return tempDel;
         } else {
-            throw new NoSuchElementException("Index: " + elementIndex + ", Size: " + size);
+            throw new java.util.NoSuchElementException("Element not found: " + element);
         }
     }
 
